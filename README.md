@@ -21,6 +21,7 @@ Instructor: Juan F. Imbet
 Course Title: Introduction to Python and Conda
 Course Description: This course provides a comprehensive introduction to Python programming and the Conda package management system.
 Program: Master 2 (203) in Financial Markets, Paris Dauphine - PSL University. 
+
 --------------------------------------------------------------------------------------------
 
 ## GitHub Instructions
