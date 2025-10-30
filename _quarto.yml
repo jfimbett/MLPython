@@ -1,29 +1,32 @@
 project:
   type: website
-  title: "Your Course Title"
+  title: "Introduction to Machine Learning with Python"
   output-dir: "_site"
   
 website:
-  title: "Your Course Title"
-  description: "Your Course Description"
+  title: "Introduction to Machine Learning with Python"
+  description: "A comprehensive one-day course covering essential ML libraries: Scikit-learn, Keras, PyTorch, and TensorFlow"
   site-url: "https://your-site-url.com"
-  repo-url: "https://github.com/your-repo-url"
+  repo-url: "https://github.com/jfimbett/TemplateCourse"
   
   navbar:
-    title: "Your Course Title"
+    title: "ML with Python"
     left:
       - text: "Home"
         href: index.html
-      - text: "Course Days"
+      - text: "Course Materials"
         menu:
-          - text: "Day 1: Title"
-            href: src/lectures/day1/lecture/index.qmd
-          - text: "Day 2: Title"
-            href: src/lectures/day2/lecture/index.qmd
-            # Add more days as needed
+          - text: "Day 1: Scikit-learn"
+            href: src/lectures/day1-scikit-learn/index.html
+          - text: "Day 1: Keras"
+            href: src/lectures/day1-keras/index.html
+          - text: "Day 1: PyTorch"
+            href: src/lectures/day1-pytorch/index.html
+          - text: "Day 1: TensorFlow"
+            href: src/lectures/day1-tensorflow/index.html
     right:
       - icon: github
-        href: "https://github.com/your-repo-url"
+        href: "https://github.com/jfimbett/TemplateCourse"
 
 format:
   html:
@@ -42,6 +45,7 @@ format:
   revealjs:
     theme: white
     css: src/assets/styles.css
+    highlight-style: github
     slide-number: true
     chalkboard: true
     preview-links: auto

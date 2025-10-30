@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://your-site-url.com/src/lectures/day1-scikit-learn/index.html</loc>
+    <lastmod>2025-10-30T09:03:39.350Z</lastmod>
+  </url>
+  <url>
+    <loc>https://your-site-url.com/src/lectures/day1-keras/index.html</loc>
+    <lastmod>2025-10-30T12:42:26.304Z</lastmod>
+  </url>
+  <url>
+    <loc>https://your-site-url.com/src/lectures/day1-pytorch/index.html</loc>
+    <lastmod>2025-10-30T09:08:16.675Z</lastmod>
+  </url>
+  <url>
+    <loc>https://your-site-url.com/src/lectures/day1-tensorflow/index.html</loc>
+    <lastmod>2025-10-30T23:39:32.559Z</lastmod>
+  </url>
+</urlset>

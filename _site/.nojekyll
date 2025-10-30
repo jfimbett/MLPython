@@ -1,0 +1,4 @@
+cd C:\Users\jfimb\Dropbox\TemplateCourse 
+git add _site/src/lectures/day1/lecture/index.html
+git commit -m "Add lecture index.html"
+git push

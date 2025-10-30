@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Introduction to Machine Learning with Python — Course Index</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root { --brand: #2596be; --bg:#fff; --fg:#000; --muted:#5a6b7b; }
+    html, body { margin:0; padding:0; font-family:"Merriweather", serif; background:var(--bg); color:var(--fg);} 
+    header { padding:48px 16px 16px; text-align:center; }
+    h1 { margin:0 0 8px; font-size:2.2rem; color:var(--brand); }
+    .sub { color:var(--muted); margin-bottom:24px; }
+    .meta { color:var(--muted); font-size:0.95rem; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:16px; padding:24px; max-width:1100px; margin:0 auto; }
+    .card { border:1px solid #e6eef3; border-radius:12px; padding:18px; background:#fff; box-shadow:0 2px 10px rgba(0,0,0,0.04); transition: transform .15s ease, box-shadow .15s ease; }
+    .card:hover { transform: translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.08); }
+    .card h2 { margin:0 0 8px; font-size:1.2rem; color:var(--brand); }
+    .card p { margin:0 0 12px; color:var(--muted); font-size:0.95rem; }
+    a.btn { display:inline-block; padding:10px 14px; background:var(--brand); color:#fff; text-decoration:none; border-radius:8px; font-weight:700; }
+    footer { text-align:center; padding:24px; color:var(--muted); font-size:0.9rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Introduction to Machine Learning with Python</h1>
+    <div class="sub">One-day course covering Scikit-learn, Keras, PyTorch, and TensorFlow</div>
+    <div class="meta">Instructor: Juan F. Imbet • Program: Master 2 (203) in Financial Markets, Paris Dauphine - PSL University • Date: Oct 31, 2025</div>
+  </header>
+
+  <section class="grid">
+    <div class="card">
+      <h2>Scikit-learn</h2>
+      <p>Foundations of ML: regression, classification, model evaluation.</p>
+  <a class="btn" href="_site/src/lectures/day1-scikit-learn/index.html">Open slides</a>
+    </div>
+    <div class="card">
+      <h2>Keras</h2>
+      <p>High-level neural networks API built on TensorFlow.</p>
+  <a class="btn" href="_site/src/lectures/day1-keras/index.html">Open slides</a>
+    </div>
+    <div class="card">
+      <h2>PyTorch</h2>
+      <p>Flexible deep learning with dynamic computation graphs and autograd.</p>
+  <a class="btn" href="_site/src/lectures/day1-pytorch/index.html">Open slides</a>
+    </div>
+    <div class="card">
+      <h2>TensorFlow</h2>
+      <p>End-to-end ML platform with strong production tooling.</p>
+  <a class="btn" href="_site/src/lectures/day1-tensorflow/index.html">Open slides</a>
+    </div>
+  </section>
+
+  <header style="padding-top:8px; text-align:center;">
+    <h1 style="font-size:1.6rem; margin-top:8px;">Code examples</h1>
+    <div class="sub">Runnable Python scripts matching the slides</div>
+  </header>
+
+  <section class="grid">
+    <div class="card">
+      <h2>Scikit-learn examples</h2>
+      <p>Regression, classification, metrics, CV, trees, random forests.</p>
+      <a class="btn" href="src/code/scikit_learn_examples.py">Open file</a>
+    </div>
+    <div class="card">
+      <h2>Keras examples</h2>
+      <p>Regression and classification with callbacks, regularization, save/load.</p>
+      <a class="btn" href="src/code/keras_examples.py">Open file</a>
+    </div>
+    <div class="card">
+      <h2>PyTorch examples</h2>
+      <p>Tensors, autograd, regression, classification, DataLoader, save/load.</p>
+      <a class="btn" href="src/code/pytorch_examples.py">Open file</a>
+    </div>
+    <div class="card">
+      <h2>TensorFlow examples</h2>
+      <p>Tensors/Variables, GradientTape, Keras classifier, TensorBoard, TF Lite.</p>
+      <a class="btn" href="src/code/tensorflow_examples.py">Open file</a>
+    </div>
+  </section>
+
+  <footer>
+    © 2025 Juan F. Imbet • Source: <a href="https://github.com/jfimbett/TemplateCourse">GitHub</a>
+  </footer>
+</body>
+</html>

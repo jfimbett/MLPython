@@ -1,0 +1,421 @@
+---
+title: "Introduction to Machine Learning with Scikit-learn"
+subtitle: "Day 1 - Part 1: Getting Started with ML"
+author: "Juan F. Imbet"
+institute: "Master 2 (203) in Financial Markets, Paris Dauphine - PSL University"
+date: "October 31, 2025"
+format:
+  revealjs:
+    theme: white
+    css: ../../assets/styles.css
+    slide-number: true
+    chalkboard: true
+    preview-links: auto
+    transition: slide
+    background-transition: fade
+    hash-type: number
+    controls: true
+    progress: true
+---
+
+## What is Scikit-learn?
+
+-   **Most popular** machine learning library in Python
+-   Built on NumPy, SciPy, and matplotlib
+-   **Simple and efficient** tools for data analysis
+-   Accessible to everybody, reusable in various contexts
+-   Open source, commercially usable (BSD license)
+-   Best for **traditional ML algorithms** (not deep learning)
+
+------------------------------------------------------------------------
+
+## Why Start with Scikit-learn?
+
+-   **Consistent API** across all algorithms
+-   Excellent **documentation** and examples
+-   Perfect for **learning ML concepts**
+-   Wide range of algorithms built-in
+-   Great for **prototyping** quickly
+-   Strong community support
+
+------------------------------------------------------------------------
+
+## Installation and Setup
+
+**Installing Scikit-learn:**
+
+``` python
+# Using pip
+pip install scikit-learn
+
+# Using conda (recommended)
+conda install scikit-learn
+
+# With all dependencies
+pip install scikit-learn numpy scipy matplotlib pandas
+```
+
+**Verify installation:**
+
+``` python
+import sklearn
+print(f"Scikit-learn version: {sklearn.__version__}")
+```
+
+------------------------------------------------------------------------
+
+## Key Components of Scikit-learn
+
+``` python
+from sklearn import datasets      # Built-in datasets
+from sklearn import preprocessing # Data preprocessing
+from sklearn import model_selection # Train/test split
+from sklearn import linear_model  # Linear models
+from sklearn import tree          # Decision trees
+from sklearn import ensemble      # Ensemble methods
+from sklearn import metrics       # Evaluation metrics
+```
+
+------------------------------------------------------------------------
+
+## The Scikit-learn Workflow
+
+1.  **Load** or create data
+2.  **Split** into training and test sets
+3.  **Preprocess** data (scaling, normalization)
+4.  **Choose** a model
+5.  **Train** the model on training data
+6.  **Predict** on test data
+7.  **Evaluate** performance
+
+------------------------------------------------------------------------
+
+## Example 1: Linear Regression
+
+**Problem:** Approximate a non-linear function
+
+``` python
+import numpy as np
+from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+
+# Generate data: y = 2x + 1 + noise
+X = np.linspace(0, 10, 100).reshape(-1, 1)
+y = 2 * X.ravel() + 1 + np.random.randn(100) * 0.5
+
+# Create and train model
+model = LinearRegression()
+model.fit(X, y)
+
+# Predict
+y_pred = model.predict(X)
+
+print(f"Coefficient: {model.coef_[0]:.2f}")
+print(f"Intercept: {model.intercept_:.2f}")
+```
+
+------------------------------------------------------------------------
+
+## Visualizing Linear Regression
+
+``` python
+plt.figure(figsize=(10, 6))
+plt.scatter(X, y, alpha=0.5, label='Data')
+plt.plot(X, y_pred, 'r-', linewidth=2, label='Prediction')
+plt.xlabel('X')
+plt.ylabel('y')
+plt.legend()
+plt.title('Linear Regression Example')
+plt.grid(True, alpha=0.3)
+plt.show()
+```
+
+------------------------------------------------------------------------
+
+## Example 2: Polynomial Regression
+
+**Approximating non-linear functions:**
+
+``` python
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.pipeline import make_pipeline
+
+# Generate non-linear data: y = sin(x)
+X = np.linspace(0, 10, 100).reshape(-1, 1)
+y = np.sin(X).ravel() + np.random.randn(100) * 0.1
+
+# Create polynomial regression model (degree 5)
+poly_model = make_pipeline(
+    PolynomialFeatures(degree=5),
+    LinearRegression()
+)
+
+poly_model.fit(X, y)
+y_poly_pred = poly_model.predict(X)
+```
+
+------------------------------------------------------------------------
+
+## Train/Test Split
+
+**Essential for evaluating model performance:**
+
+``` python
+from sklearn.model_selection import train_test_split
+
+# Generate data
+X = np.random.randn(1000, 5)  # 1000 samples, 5 features
+y = X[:, 0] * 2 + X[:, 1] * 3 + np.random.randn(1000) * 0.5
+
+# Split: 80% train, 20% test
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+print(f"Training set: {X_train.shape}")
+print(f"Test set: {X_test.shape}")
+```
+
+------------------------------------------------------------------------
+
+## Model Evaluation Metrics
+
+``` python
+from sklearn.metrics import mean_squared_error, r2_score
+
+# Train model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Predict on test set
+y_pred = model.predict(X_test)
+
+# Calculate metrics
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print(f"Mean Squared Error: {mse:.4f}")
+print(f"R² Score: {r2:.4f}")
+```
+
+------------------------------------------------------------------------
+
+## Example 3: Classification
+
+**Binary classification with Logistic Regression:**
+
+``` python
+from sklearn.linear_model import LogisticRegression
+from sklearn.datasets import make_classification
+
+# Generate 2D classification data
+X, y = make_classification(
+    n_samples=200, n_features=2, n_redundant=0,
+    n_informative=2, n_clusters_per_class=1,
+    random_state=42
+)
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+```
+
+------------------------------------------------------------------------
+
+## Training a Classifier
+
+``` python
+# Create and train classifier
+clf = LogisticRegression()
+clf.fit(X_train, y_train)
+
+# Predict
+y_pred = clf.predict(X_test)
+
+# Predict probabilities
+y_proba = clf.predict_proba(X_test)
+
+print(f"Training accuracy: {clf.score(X_train, y_train):.3f}")
+print(f"Test accuracy: {clf.score(X_test, y_test):.3f}")
+```
+
+------------------------------------------------------------------------
+
+## Classification Metrics
+
+``` python
+from sklearn.metrics import accuracy_score, precision_score
+from sklearn.metrics import recall_score, f1_score
+from sklearn.metrics import confusion_matrix
+
+accuracy = accuracy_score(y_test, y_pred)
+precision = precision_score(y_test, y_pred)
+recall = recall_score(y_test, y_pred)
+f1 = f1_score(y_test, y_pred)
+
+print(f"Accuracy: {accuracy:.3f}")
+print(f"Precision: {precision:.3f}")
+print(f"Recall: {recall:.3f}")
+print(f"F1-Score: {f1:.3f}")
+
+# Confusion matrix
+cm = confusion_matrix(y_test, y_pred)
+print(f"Confusion Matrix:\n{cm}")
+```
+
+------------------------------------------------------------------------
+
+## Decision Boundaries Visualization
+
+``` python
+import matplotlib.pyplot as plt
+
+# Create mesh for decision boundary
+h = 0.02  # step size
+x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+xx, yy = np.meshgrid(
+    np.arange(x_min, x_max, h),
+    np.arange(y_min, y_max, h)
+)
+
+# Predict for each point in mesh
+Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
+Z = Z.reshape(xx.shape)
+
+# Plot
+plt.contourf(xx, yy, Z, alpha=0.3)
+plt.scatter(X[:, 0], X[:, 1], c=y, edgecolors='k')
+plt.title('Decision Boundary')
+plt.show()
+```
+
+------------------------------------------------------------------------
+
+## Cross-Validation
+
+**Better evaluation with k-fold cross-validation:**
+
+``` python
+from sklearn.model_selection import cross_val_score
+
+# Perform 5-fold cross-validation
+scores = cross_val_score(
+    clf, X, y, cv=5, scoring='accuracy'
+)
+
+print(f"Cross-validation scores: {scores}")
+print(f"Mean accuracy: {scores.mean():.3f} (+/- {scores.std():.3f})")
+```
+
+------------------------------------------------------------------------
+
+## Feature Scaling
+
+**Important for many algorithms:**
+
+``` python
+from sklearn.preprocessing import StandardScaler
+
+# Create scaler
+scaler = StandardScaler()
+
+# Fit on training data, transform both train and test
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Train model on scaled data
+clf_scaled = LogisticRegression()
+clf_scaled.fit(X_train_scaled, y_train)
+
+print(f"Accuracy with scaling: {clf_scaled.score(X_test_scaled, y_test):.3f}")
+```
+
+------------------------------------------------------------------------
+
+## Example 4: Decision Trees
+
+**Non-linear classification:**
+
+``` python
+from sklearn.tree import DecisionTreeClassifier
+
+# Create and train decision tree
+tree_clf = DecisionTreeClassifier(max_depth=3, random_state=42)
+tree_clf.fit(X_train, y_train)
+
+# Evaluate
+train_score = tree_clf.score(X_train, y_train)
+test_score = tree_clf.score(X_test, y_test)
+
+print(f"Training accuracy: {train_score:.3f}")
+print(f"Test accuracy: {test_score:.3f}")
+```
+
+------------------------------------------------------------------------
+
+## Random Forests
+
+**Ensemble of decision trees:**
+
+``` python
+from sklearn.ensemble import RandomForestClassifier
+
+# Create random forest
+rf_clf = RandomForestClassifier(
+    n_estimators=100,  # number of trees
+    max_depth=5,
+    random_state=42
+)
+
+rf_clf.fit(X_train, y_train)
+
+print(f"Random Forest accuracy: {rf_clf.score(X_test, y_test):.3f}")
+
+# Feature importance
+print(f"Feature importances: {rf_clf.feature_importances_}")
+```
+
+------------------------------------------------------------------------
+
+## Key Takeaways: Scikit-learn
+
+-   **Easiest library** to start with ML
+-   **Consistent API**: `fit()`, `predict()`, `score()`
+-   Perfect for **traditional ML** algorithms
+-   Always **split your data** (train/test)
+-   Use **cross-validation** for robust evaluation
+-   **Scale your features** when necessary
+-   Great for **quick prototyping**
+
+------------------------------------------------------------------------
+
+## When to Use Scikit-learn?
+
+✅ **Use for:**
+
+-   Traditional ML algorithms (regression, classification, clustering)
+-   Small to medium datasets that fit in memory
+-   Quick prototyping and experimentation
+-   Learning ML concepts
+
+❌ **Not ideal for:**
+
+-   Deep learning (use Keras/PyTorch instead)
+-   Very large datasets (billions of rows)
+-   GPU acceleration
+
+------------------------------------------------------------------------
+
+## Next Steps
+
+-   Explore more algorithms (SVM, KNN, Naive Bayes)
+-   Learn about hyperparameter tuning (GridSearchCV)
+-   Practice with real datasets (UCI ML Repository)
+-   Move to **Keras** for neural networks
+
+**Resources:**
+
+-   Documentation: [scikit-learn.org](https://scikit-learn.org)
+-   Examples: [scikit-learn.org/stable/auto_examples](https://scikit-learn.org/stable/auto_examples)

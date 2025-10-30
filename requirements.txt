@@ -1,0 +1,32 @@
+# Python dependencies for the ML Python course
+# Tip: use Python 3.10 or 3.11 for best compatibility across all libraries.
+
+# Core scientific stack
+numpy
+scipy
+matplotlib
+
+# Machine learning
+scikit-learn
+
+# Deep learning (multi-backend Keras)
+# Keras 3 frontend works with TensorFlow or PyTorch backends.
+keras>=3
+
+# Default TF backend (on Windows / Linux, or macOS Apple Silicon via pip):
+# Note: On Apple Silicon use 'tensorflow-macos' and 'tensorflow-metal' in your conda env.
+tensorflow
+
+# PyTorch backend (used by default on macOS in our examples to avoid AVX issues on some CPUs)
+# For GPU-specific builds, see https://pytorch.org/get-started/locally/
+torch
+
+# Optional: if you plan to run TensorBoard demos
+# tensorboard
+
+# Notes:
+# - On macOS Apple Silicon in a conda env, prefer installing via:
+#     pip install tensorflow-macos tensorflow-metal
+# - On macOS Intel without AVX, TensorFlow wheels may not work. Use:
+#     pip install "keras>=3" torch
+#   and set KERAS_BACKEND=torch before running Keras code.

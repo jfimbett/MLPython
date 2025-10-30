@@ -1,0 +1,576 @@
+---
+title: "Introduction to Machine Learning with Keras"
+subtitle: "Day 1 - Part 2: Neural Networks Made Easy"
+author: "Juan F. Imbet"
+institute: "Master 2 (203) in Financial Markets, Paris Dauphine - PSL University"
+date: "October 31, 2025"
+format:
+  revealjs:
+    theme: white
+    css: ../../assets/styles.css
+    slide-number: true
+    chalkboard: true
+    preview-links: auto
+    transition: slide
+    background-transition: fade
+    hash-type: number
+    controls: true
+    progress: true
+---
+
+## What is Keras?
+
+-   **High-level** neural networks API
+-   Built on top of **TensorFlow**
+-   Designed for **fast experimentation**
+-   User-friendly, modular, and extensible
+-   Supports **both** CNNs and RNNs
+-   **Industry standard** for quick prototyping
+
+------------------------------------------------------------------------
+
+## Why Use Keras?
+
+-   **Simplicity**: Write less code, do more
+-   **Beginner-friendly** with clear error messages
+-   **Production-ready**: Scales to large clusters
+-   **Multi-backend** support (TensorFlow, Theano, CNTK)
+-   Excellent **documentation** and tutorials
+-   Used by **Google, Netflix, Uber**, and more
+
+------------------------------------------------------------------------
+
+## Installation and Setup (Windows/macOS with Conda)
+
+We’ll use a Conda environment. Activate it first, then install with pip or conda as noted.
+
+Windows (CPU):
+
+``` bash
+conda create -n mlpython python=3.11 -y
+conda activate mlpython
+python -m pip install --upgrade pip
+pip install tensorflow
+```
+
+macOS Apple Silicon (M1/M2):
+
+``` bash
+conda create -n mlpython python=3.11 -y
+conda activate mlpython
+python -m pip install --upgrade pip setuptools wheel
+pip install tensorflow-macos tensorflow-metal
+```
+
+macOS Intel without AVX (fallback using Keras 3 + PyTorch backend):
+
+``` bash
+conda create -n mlpython python=3.11 -y
+conda activate mlpython
+python -m pip install --upgrade pip
+pip install "keras>=3" torch
+# Set backend to PyTorch
+# macOS/Linux:
+export KERAS_BACKEND=torch
+# Windows (Powershell):
+$env:KERAS_BACKEND = "torch"
+```
+
+Verify (portable):
+
+``` python
+import os, keras
+print('Keras:', keras.__version__)
+bk = os.environ.get('KERAS_BACKEND', 'tensorflow')
+print('Backend:', bk)
+if bk == 'torch':
+    import torch; print('PyTorch:', torch.__version__)
+else:
+    import tensorflow as tf; print('TensorFlow:', tf.__version__)
+```
+
+------------------------------------------------------------------------
+
+## Portable Keras imports (multi-backend)
+
+``` python
+import os
+# Use torch backend on macOS by default; otherwise TensorFlow
+import platform
+if 'KERAS_BACKEND' not in os.environ:
+    os.environ['KERAS_BACKEND'] = 'torch' if platform.system() == 'Darwin' else 'tensorflow'
+
+import keras
+from keras import layers
+
+# Core modules (portable)
+from keras.models import Sequential, Model
+from keras.layers import Dense, Dropout, Activation
+from keras.optimizers import Adam, SGD
+from keras.losses import MeanSquaredError
+from keras.metrics import Accuracy
+from keras.callbacks import EarlyStopping
+```
+
+------------------------------------------------------------------------
+
+## Two Ways to Build Models
+
+**Sequential API (simpler):**
+
+``` python
+model = Sequential([
+    Dense(64, activation='relu'),
+    Dense(32, activation='relu'),
+    Dense(1)
+])
+```
+
+**Functional API (more flexible):**
+
+``` python
+inputs = keras.Input(shape=(10,))
+x = layers.Dense(64, activation='relu')(inputs)
+x = layers.Dense(32, activation='relu')(x)
+outputs = layers.Dense(1)(x)
+model = keras.Model(inputs=inputs, outputs=outputs)
+```
+
+------------------------------------------------------------------------
+
+## The Keras Workflow
+
+1.  **Prepare** data (normalize, reshape)
+2.  **Define** model architecture
+3.  **Compile** model (optimizer, loss, metrics)
+4.  **Train** model with `fit()`
+5.  **Evaluate** on test data
+6.  **Predict** on new data
+
+------------------------------------------------------------------------
+
+## Example 1: Regression with Neural Networks
+
+**Approximating a non-linear function:**
+
+``` python
+import numpy as np
+from tensorflow import keras
+from tensorflow.keras import layers
+
+# Generate data: y = sin(x) + cos(2*x)
+X = np.linspace(-5, 5, 1000).reshape(-1, 1)
+y = np.sin(X) + np.cos(2 * X) + np.random.randn(1000, 1) * 0.1
+
+# Split data
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+```
+
+------------------------------------------------------------------------
+
+## Building the Neural Network
+
+``` python
+# Create model
+model = keras.Sequential([
+    layers.Dense(64, activation='relu', input_shape=(1,)),
+    layers.Dense(64, activation='relu'),
+    layers.Dense(32, activation='relu'),
+    layers.Dense(1)  # Output layer (no activation for regression)
+])
+
+# Compile model
+model.compile(
+    optimizer='adam',
+    loss='mse',  # Mean Squared Error
+    metrics=['mae']  # Mean Absolute Error
+)
+
+# View model architecture
+model.summary()
+```
+
+------------------------------------------------------------------------
+
+## Training the Model
+
+``` python
+# Train model
+history = model.fit(
+    X_train, y_train,
+    epochs=100,
+    batch_size=32,
+    validation_split=0.2,  # Use 20% of training data for validation
+    verbose=1
+)
+
+# Evaluate on test set
+test_loss, test_mae = model.evaluate(X_test, y_test)
+print(f"Test MAE: {test_mae:.4f}")
+
+# Make predictions
+y_pred = model.predict(X_test)
+```
+
+------------------------------------------------------------------------
+
+## Visualizing Training History
+
+``` python
+import matplotlib.pyplot as plt
+
+# Plot training history
+plt.figure(figsize=(12, 4))
+
+plt.subplot(1, 2, 1)
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+plt.subplot(1, 2, 2)
+plt.plot(history.history['mae'], label='Training MAE')
+plt.plot(history.history['val_mae'], label='Validation MAE')
+plt.xlabel('Epoch')
+plt.ylabel('MAE')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
+```
+
+------------------------------------------------------------------------
+
+## Example 2: Binary Classification
+
+**Creating a 2D classification problem:**
+
+``` python
+from sklearn.datasets import make_moons
+
+# Generate moon-shaped data (non-linearly separable)
+X, y = make_moons(n_samples=1000, noise=0.1, random_state=42)
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Normalize features (important for neural networks!)
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+```
+
+------------------------------------------------------------------------
+
+## Building a Classifier
+
+``` python
+# Create classification model
+classifier = keras.Sequential([
+    layers.Dense(32, activation='relu', input_shape=(2,)),
+    layers.Dropout(0.3),  # Regularization
+    layers.Dense(16, activation='relu'),
+    layers.Dropout(0.2),
+    layers.Dense(1, activation='sigmoid')  # Binary classification
+])
+
+# Compile
+classifier.compile(
+    optimizer='adam',
+    loss='binary_crossentropy',
+    metrics=['accuracy']
+)
+
+classifier.summary()
+```
+
+------------------------------------------------------------------------
+
+## Training the Classifier
+
+``` python
+# Train with early stopping
+from tensorflow.keras.callbacks import EarlyStopping
+
+early_stop = EarlyStopping(
+    monitor='val_loss',
+    patience=10,
+    restore_best_weights=True
+)
+
+history = classifier.fit(
+    X_train, y_train,
+    epochs=100,
+    batch_size=32,
+    validation_split=0.2,
+    callbacks=[early_stop],
+    verbose=1
+)
+
+# Evaluate
+test_loss, test_acc = classifier.evaluate(X_test, y_test)
+print(f"Test Accuracy: {test_acc:.4f}")
+```
+
+------------------------------------------------------------------------
+
+## Making Predictions
+
+``` python
+# Predict probabilities
+y_proba = classifier.predict(X_test)
+
+# Convert to binary predictions (threshold = 0.5)
+y_pred = (y_proba > 0.5).astype(int)
+
+# Evaluation metrics
+from sklearn.metrics import classification_report
+print(classification_report(y_test, y_pred))
+
+# Confusion matrix
+from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(y_test, y_pred)
+print(f"Confusion Matrix:\n{cm}")
+```
+
+------------------------------------------------------------------------
+
+## Example 3: Multi-class Classification
+
+**Classifying into 3 classes:**
+
+``` python
+from sklearn.datasets import make_blobs
+
+# Generate 3-class data
+X, y = make_blobs(
+    n_samples=1000, centers=3, n_features=2,
+    cluster_std=1.5, random_state=42
+)
+
+# Split and scale
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+```
+
+------------------------------------------------------------------------
+
+## Multi-class Model
+
+``` python
+# Create multi-class classifier
+multi_clf = keras.Sequential([
+    layers.Dense(64, activation='relu', input_shape=(2,)),
+    layers.Dense(32, activation='relu'),
+    layers.Dense(3, activation='softmax')  # 3 classes
+])
+
+# Compile
+multi_clf.compile(
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',  # For integer labels
+    metrics=['accuracy']
+)
+
+# Train
+history = multi_clf.fit(
+    X_train, y_train,
+    epochs=50,
+    batch_size=32,
+    validation_split=0.2,
+    verbose=0
+)
+```
+
+------------------------------------------------------------------------
+
+## Custom Training Loop
+
+**More control over training:**
+
+``` python
+import tensorflow as tf
+
+# Define optimizer and loss
+optimizer = keras.optimizers.Adam(learning_rate=0.001)
+loss_fn = keras.losses.SparseCategoricalCrossentropy()
+
+# Training step
+@tf.function
+def train_step(x, y):
+    with tf.GradientTape() as tape:
+        predictions = multi_clf(x, training=True)
+        loss = loss_fn(y, predictions)
+    
+    gradients = tape.gradient(loss, multi_clf.trainable_variables)
+    optimizer.apply_gradients(zip(gradients, multi_clf.trainable_variables))
+    
+    return loss
+```
+
+------------------------------------------------------------------------
+
+## Callbacks for Better Training
+
+``` python
+from tensorflow.keras.callbacks import (
+    EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+)
+
+callbacks = [
+    # Stop if validation loss doesn't improve
+    EarlyStopping(monitor='val_loss', patience=10, 
+                  restore_best_weights=True),
+    
+    # Save best model
+    ModelCheckpoint('best_model.h5', save_best_only=True),
+    
+    # Reduce learning rate when plateauing
+    ReduceLROnPlateau(monitor='val_loss', factor=0.5, 
+                      patience=5, min_lr=1e-7)
+]
+
+model.fit(X_train, y_train, epochs=100, 
+          validation_split=0.2, callbacks=callbacks)
+```
+
+------------------------------------------------------------------------
+
+## Activation Functions
+
+``` python
+# Common activation functions
+model = keras.Sequential([
+    layers.Dense(64, activation='relu'),      # ReLU: max(0, x)
+    layers.Dense(64, activation='tanh'),      # Tanh: [-1, 1]
+    layers.Dense(64, activation='sigmoid'),   # Sigmoid: [0, 1]
+    layers.Dense(64, activation='elu'),       # ELU: smooth ReLU
+    layers.Dense(64, activation='selu'),      # SELU: self-normalizing
+    layers.Dense(64, activation='swish'),     # Swish: x * sigmoid(x)
+])
+
+# For output layers:
+# Regression: no activation or 'linear'
+# Binary classification: 'sigmoid'
+# Multi-class classification: 'softmax'
+```
+
+------------------------------------------------------------------------
+
+## Regularization Techniques
+
+``` python
+from tensorflow.keras import regularizers
+
+# L1, L2, and Dropout regularization
+model = keras.Sequential([
+    layers.Dense(64, activation='relu',
+                 kernel_regularizer=regularizers.l2(0.01)),
+    layers.Dropout(0.5),  # Drop 50% of neurons
+    
+    layers.Dense(32, activation='relu',
+                 kernel_regularizer=regularizers.l1_l2(l1=0.01, l2=0.01)),
+    layers.Dropout(0.3),
+    
+    layers.Dense(1, activation='sigmoid')
+])
+```
+
+------------------------------------------------------------------------
+
+## Optimizers Comparison
+
+``` python
+# Different optimizers
+optimizers_list = [
+    keras.optimizers.SGD(learning_rate=0.01),           # Stochastic Gradient Descent
+    keras.optimizers.SGD(learning_rate=0.01, momentum=0.9),  # SGD with momentum
+    keras.optimizers.RMSprop(learning_rate=0.001),      # RMSprop
+    keras.optimizers.Adam(learning_rate=0.001),         # Adam (most popular)
+    keras.optimizers.Adamax(learning_rate=0.001),       # Adamax
+    keras.optimizers.Nadam(learning_rate=0.001),        # Nadam
+]
+
+# Adam is usually the best default choice
+model.compile(
+    optimizer=keras.optimizers.Adam(learning_rate=0.001),
+    loss='mse'
+)
+```
+
+------------------------------------------------------------------------
+
+## Saving and Loading Models
+
+``` python
+# Save entire model
+model.save('my_model.h5')
+model.save('my_model.keras')  # Keras format (recommended)
+
+# Save only weights
+model.save_weights('model_weights.h5')
+
+# Load model
+loaded_model = keras.models.load_model('my_model.keras')
+
+# Load weights into existing model
+model.load_weights('model_weights.h5')
+
+# Make predictions with loaded model
+predictions = loaded_model.predict(X_test)
+```
+
+------------------------------------------------------------------------
+
+## Key Takeaways: Keras
+
+-   **User-friendly** API for neural networks
+-   **Sequential API**: for simple, linear stacks
+-   **Functional API**: for complex architectures
+-   Always **normalize/scale** your input data
+-   Use **callbacks** for better training control
+-   **Dropout** and **regularization** prevent overfitting
+-   **Adam** optimizer is a great default choice
+
+------------------------------------------------------------------------
+
+## When to Use Keras?
+
+✅ **Use for:**
+
+-   Quick prototyping of neural networks
+-   Standard deep learning architectures
+-   When you want simple, readable code
+-   Production deployment (via TensorFlow)
+
+⚠️ **Consider alternatives when:**
+
+-   You need very fine-grained control (use PyTorch)
+-   Working with research/cutting-edge architectures
+-   Custom gradient computations
+
+------------------------------------------------------------------------
+
+## Next Steps
+
+-   Experiment with **deeper networks**
+-   Learn about **Convolutional Neural Networks** (CNNs)
+-   Explore **Recurrent Neural Networks** (RNNs)
+-   Move to **PyTorch** for more control
+
+**Resources:**
+
+-   Documentation: [keras.io](https://keras.io)
+-   Tutorials: [tensorflow.org/tutorials](https://tensorflow.org/tutorials)
