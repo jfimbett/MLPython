@@ -84,10 +84,10 @@ class RegressionNet(nn.Module):
 
     def __init__(self):
         super().__init__()
-        self.fc1 = nn.Linear(1, 64)
-        self.fc2 = nn.Linear(64, 64)
-        self.fc3 = nn.Linear(64, 32)
-        self.fc4 = nn.Linear(32, 1)
+        self.fc1 = nn.Linear(1, 128)
+        self.fc2 = nn.Linear(128, 128)
+        self.fc3 = nn.Linear(128, 128)
+        self.fc4 = nn.Linear(128, 1)
         self.relu = nn.ReLU()
 
     def forward(self, x):
@@ -131,15 +131,30 @@ def regression_demo() -> None:
         test_loss = criterion(model(X_test), y_test)
         print('Test loss:', float(test_loss))
 
+    # add a plot to see how well it fits the original data and the testing data
+    model.eval()
+    with torch.no_grad():
+        y_pred = model(X_tensor).numpy()
+    plt.figure(figsize=(10, 6))
+    plt.scatter(X, y, label='Noisy data', alpha=0.3)
+    plt.plot(X, y_pred, color='red', label='Model prediction')
+    plt.title('Regression Model Fit')
+    plt.xlabel('X')
+    plt.ylabel('y')
+    plt.legend()
+    plt.show()
+
+
+
 
 class Classifier(nn.Module):
     """Binary classifier MLP with dropout and sigmoid output."""
 
     def __init__(self):
         super().__init__()
-        self.fc1 = nn.Linear(2, 32)
-        self.fc2 = nn.Linear(32, 16)
-        self.fc3 = nn.Linear(16, 1)
+        self.fc1 = nn.Linear(2, 64)
+        self.fc2 = nn.Linear(64, 64)
+        self.fc3 = nn.Linear(64, 1)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(0.3)
         self.sigmoid = nn.Sigmoid()
@@ -185,6 +200,24 @@ def binary_classification_demo() -> None:
         print('Confusion matrix:\n', confusion_matrix(y_test.numpy(), test_pred.numpy()))
         print('Report:\n', classification_report(y_test.numpy(), test_pred.numpy()))
 
+
+    # plot decision boundary (inside of the function)
+    x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+    y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.01),
+                         np.arange(y_min, y_max, 0.01))
+    grid = np.c_[xx.ravel(), yy.ravel()]
+    grid_t = torch.FloatTensor(scaler.transform(grid))
+    model.eval()
+    with torch.no_grad():
+        probs = model(grid_t).numpy().reshape(xx.shape)
+    plt.figure(figsize=(10, 6))
+    plt.contourf(xx, yy, probs, levels=50, cmap='RdBu', alpha=0.6)
+    plt.scatter(X[:, 0], X[:, 1], c=y, edgecolors='k', cmap='RdBu')
+    plt.title('Decision Boundary')
+    plt.xlabel('Feature 1')
+    plt.ylabel('Feature 2')
+    plt.show()
 
 def dataloader_demo() -> None:
     """Demonstrate DataLoader for batching/shuffling.
