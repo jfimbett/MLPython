@@ -30,3 +30,14 @@ torch
 # - On macOS Intel without AVX, TensorFlow wheels may not work. Use:
 #     pip install "keras>=3" torch
 #   and set KERAS_BACKEND=torch before running Keras code.
+
+# --- LLMs (optional, for Day 1: LLMs slides) ---
+# Small client libs for commercial APIs
+openai
+anthropic
+
+# Hugging Face for local models
+transformers
+accelerate
+# Optional: for private/model downloads; requires auth for gated models
+huggingface_hub

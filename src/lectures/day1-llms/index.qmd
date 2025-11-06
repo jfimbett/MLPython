@@ -1,0 +1,413 @@
+---
+title: "Day 1: Large Language Models (LLMs)"
+subtitle: "APIs + Hugging Face quickstart"
+author: "Juan F. Imbet"
+format:
+  revealjs:
+    theme: white
+    css: ../../assets/styles.css
+    slide-number: true
+    chalkboard: true
+    preview-links: auto
+    transition: slide
+    background-transition: fade
+    center: false
+execute:
+  enabled: false
+---
+
+## Agenda
+
+-   What LLMs are (quick intuition)
+-   Use commercial LLM APIs from Python (OpenAI, Anthropic)
+-   Good practices: auth, costs, streaming, retries
+-   Hugging Face: install, pick a model, run locally
+-   CPU-friendly demo models for laptops (tiny-gpt2, distil models)
+
+------------------------------------------------------------------------
+
+## How LLMs work (under the hood)
+
+-   LLMs read text in small chunks (called tokens) and learn patterns about which words tend to follow others.
+-   They are trained to predict the next token, billions of times, over very large text collections.
+-   After pretraining, they’re refined to follow instructions and be helpful/safe.
+-   At generation time, the model picks the next token repeatedly to form sentences and paragraphs; you can make it more or less random with the temperature setting.
+
+Plain-language picture:
+-   Break input into tokens → look at context → predict the next token → repeat until you hit a stop condition.
+
+------------------------------------------------------------------------
+
+## Using commercial APIs from Python (overview)
+
+-   Providers: OpenAI, Anthropic, Azure OpenAI, Google AI Studio.
+-   Typical flow: set API key (env var), send prompt, get text/tool outputs.
+-   Billing by tokens; control with temperature, max tokens; prefer shorter prompts and structured outputs (JSON).
+-   Keep keys in environment variables, never hard-code.
+
+------------------------------------------------------------------------
+
+## OpenAI API (chat completions)
+
+Installation:
+
+``` bash
+pip install openai
+```
+
+Environment:
+
+``` bash
+export OPENAI_API_KEY=...   # macOS/Linux (zsh)
+```
+
+Python (finance example):
+
+``` python
+from openai import OpenAI
+import os
+
+client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])  # or rely on env var only
+
+resp = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[
+        {"role": "system", "content": "You are a concise finance tutor."},
+        {"role": "user", "content": "Explain the CAPM intuition in 3 bullets for a portfolio manager."}
+    ],
+    temperature=0.2,
+)
+
+print(resp.choices[0].message.content)
+```
+
+------------------------------------------------------------------------
+
+## OpenAI chat completions: key arguments (from docs)
+
+- model: model ID (e.g., "gpt-4o-mini").
+- messages: array of chat messages with {role, content}.
+- temperature: 0–2; higher is more random. Recommend changing this or top_p, not both.
+- top_p: nucleus sampling; consider only the top p probability mass.
+- max_completion_tokens: upper bound on generated tokens.
+- stop: up to 4 stop sequences.
+- n: number of choices to generate (cost scales with choices).
+- presence_penalty: -2 to 2; encourage talking about new topics.
+- frequency_penalty: -2 to 2; discourage repeating tokens.
+- logprobs: whether to return log probabilities of output tokens.
+- top_logprobs: 0–20; how many highest-probability tokens to include with logprobs.
+- logit_bias: map of token_id -> bias [-100,100] to adjust likelihoods.
+- tools: list of tools the model may call; see function calling.
+- tool_choice: control whether/which tool is called (none | auto | required | specific function).
+- response_format: configure JSON mode or JSON schema for structured outputs.
+- parallel_tool_calls: enable parallel function calls during tool use.
+- service_tier: processing tier (auto | default | flex | priority).
+- store: whether to store this completion for later listing.
+
+
+---
+
+## OpenAI: log probabilities (finance example)
+
+```python
+from openai import OpenAI
+import os
+
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+resp = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[
+        {"role": "system", "content": "You are a finance assistant."},
+        {"role": "user", "content": "Continue the sentence: 'In CAPM, expected return equals the risk-free rate plus beta times the ...'"}
+    ],
+    temperature=0.0,
+    logprobs=True,
+    top_logprobs=5,
+)
+
+choice = resp.choices[0]
+print("Output:", choice.message.content)
+if choice.logprobs and choice.logprobs.content:
+    # Show top candidate tokens with log probabilities for the first generated token
+    first = choice.logprobs.content[0]
+    for cand in first.top_logprobs:
+        print(cand.token, cand.logprob)
+```
+
+Notes:
+
+- logprobs returns per-token log probabilities for the generated output.
+- top_logprobs controls how many alternatives are returned for each position.
+
+------------------------------------------------------------------------
+
+## Anthropic (Claude) API
+
+Installation:
+
+``` bash
+pip install anthropic
+```
+
+Environment:
+
+``` bash
+export ANTHROPIC_API_KEY=...
+```
+
+Python (finance example):
+
+``` python
+from anthropic import Anthropic
+import os
+
+client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])  # or via env only
+
+msg = client.messages.create(
+    model="claude-3-5-sonnet-latest",
+    max_tokens=300,
+    messages=[
+        {"role": "user", "content": "Give a 1-paragraph intuition for hedging with index futures for an equity portfolio."}
+    ],
+)
+
+print(msg.content[0].text)
+```
+
+------------------------------------------------------------------------
+
+## Practical tips for API usage
+
+-   Guardrails: set max tokens; keep temperature low for determinism; validate outputs (e.g., pydantic/JSON schema).
+-   Retries: exponential backoff for rate limits and transient errors.
+-   Streaming: render partial tokens for better UX on long responses.
+-   Cost control: prefer smaller models first, cache prompts, measure with provider usage endpoints.
+
+------------------------------------------------------------------------
+
+## Build a Finance LLM CLI (Typer + Rich)
+
+Goal: a friendly command-line app that answers finance questions via an LLM with a finance-focused system message.
+
+Install dependencies:
+
+```bash
+pip install openai typer rich python-dotenv
+```
+
+We’ll place the runnable script at `src/lectures/day1-llms/finance_llm_cli.py`.
+
+---
+
+## CLI app: imports, config, and client
+
+```python
+"""
+src/lectures/day1-llms/finance_llm_cli.py
+"""
+import os
+import sys
+from typing import Optional
+
+import typer
+from rich.console import Console
+from rich.panel import Panel
+from rich.markdown import Markdown
+from rich.table import Table
+from dotenv import load_dotenv
+from openai import OpenAI
+
+load_dotenv()  # loads .env if present
+console = Console()
+
+DEFAULT_SYSTEM = (
+    "You are a finance research assistant specialized in financial markets. "
+    "Answer concisely, show clear assumptions, and prefer plain-language explanations."
+)
+
+def create_client() -> OpenAI:
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        console.print(
+            Panel.fit(
+                "Missing OPENAI_API_KEY. Set it in your environment or .env file.",
+                title="Configuration error",
+                style="bold red",
+            )
+        )
+        raise typer.Exit(code=1)
+    return OpenAI(api_key=api_key)
+```
+
+---
+
+## CLI app: define the Typer command
+
+```python
+app = typer.Typer(help="Finance LLM CLI — ask questions about markets")
+
+@app.command()
+def ask(
+    question: str = typer.Argument(..., help="Your finance question"),
+    model: str = typer.Option("gpt-4o-mini", help="Model ID"),
+    temperature: float = typer.Option(0.2, min=0.0, max=2.0, help="Sampling temperature"),
+    max_tokens: int = typer.Option(500, help="Max new tokens for the answer"),
+    system: Optional[str] = typer.Option(None, help="Override the finance system message"),
+):
+    """Ask a finance question and print a nicely formatted answer."""
+    client = create_client()
+    system_msg = system or DEFAULT_SYSTEM
+    console.rule("Finance LLM")
+    console.print(Panel.fit(question, title="Question", style="bold cyan"))
+
+    resp = client.chat.completions.create(
+        model=model,
+        temperature=temperature,
+        max_completion_tokens=max_tokens,
+        messages=[
+            {"role": "system", "content": system_msg},
+            {"role": "user", "content": question},
+        ],
+    )
+
+    content = resp.choices[0].message.content
+    console.print(Panel(Markdown(content), title="Answer", border_style="green"))
+
+    # Show token usage if available
+    if getattr(resp, "usage", None):
+        usage = resp.usage
+        table = Table(title="Token usage")
+        table.add_column("prompt_tokens", justify="right")
+        table.add_column("completion_tokens", justify="right")
+        table.add_column("total_tokens", justify="right")
+        table.add_row(str(usage.prompt_tokens), str(usage.completion_tokens), str(usage.total_tokens))
+        console.print(table)
+
+def main():
+    try:
+        app()
+    except KeyboardInterrupt:
+        console.print("\nInterrupted.")
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## Run the CLI
+
+```bash
+python src/lectures/day1-llms/finance_llm_cli.py ask \
+  "Summarize key drivers of yield curve inversion in 5 bullet points" \
+  --temperature 0.2 --max-tokens 400
+```
+
+Tip:
+
+- Use --system to override the default finance assistant instructions.
+- Use --model to try other models (e.g., gpt-4o-mini, gpt-4o).
+
+---
+
+## Secrets with .env and .gitignore
+
+Create a `.env` file (same folder as you run the command or project root):
+
+```dotenv
+# .env
+OPENAI_API_KEY=sk-...your-key-here...
+```
+
+Load automatically with `python-dotenv` (already in the code via load_dotenv()).
+
+Add `.env` to your `.gitignore` to avoid committing secrets:
+
+```gitignore
+# never commit secrets
+.env
+```
+
+Optional: provide a `.env.example` without real keys for collaborators.
+
+------------------------------------------------------------------------
+
+## Hugging Face: install and pick a model
+
+Installation (CPU-friendly baseline):
+
+``` bash
+pip install -U transformers accelerate
+```
+
+Notes:
+
+- For Apple Silicon: recent PyTorch works with `mps` automatically; no extra setup needed in recent wheels.
+- Use tiny models for demos: `sshleifer/tiny-gpt2`, `distilgpt2`, or `google/flan-t5-small` for instruction tasks.
+
+------------------------------------------------------------------------
+
+## Quick start: pipeline (text-generation)
+
+``` python
+from transformers import pipeline
+
+# Tiny model: fast on CPU for classroom demos
+pipe = pipeline("text-generation", model="sshleifer/tiny-gpt2")
+
+out = pipe(
+    "Write one sentence explaining the equity risk premium:",
+    max_new_tokens=30,
+    do_sample=False,
+)
+print(out[0]["generated_text"])
+```
+
+------------------------------------------------------------------------
+
+## Local LLM with Auto classes
+
+``` python
+from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
+
+model_id = "distilgpt2"  # small, runs on CPU
+
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+model = AutoModelForCausalLM.from_pretrained(
+    model_id,
+    torch_dtype=torch.float32,
+    device_map="auto",  # uses MPS/GPU if available, otherwise CPU
+)
+
+prompt = "Summarize the yield curve and why it can invert, in 2 lines:\n"
+inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+outputs = model.generate(**inputs, max_new_tokens=50)
+print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+```
+
+------------------------------------------------------------------------
+
+## Optional: slightly larger models and efficiency
+
+-   Quantization (int8/int4) and low-precision loading reduce memory; see `bitsandbytes` and `AutoGPTQ` models.
+-   Example (NVIDIA Linux recommended): load 4-bit quantized weights; on macOS prefer smaller FP16/FP32 models instead.
+-   For instruction-following locally: try `TinyLlama/TinyLlama-1.1B-Chat-v1.0` with enough RAM.
+
+------------------------------------------------------------------------
+
+## When to use API vs local
+
+-   Start with commercial APIs for best quality and tools; great for prototyping and production.
+-   Use local models for privacy, offline use, or cost control; expect lower quality and more ops work.
+-   Hybrid: route easy prompts to small local models, hard ones to API.
+
+------------------------------------------------------------------------
+
+## References
+
+-   Vaswani et al. (2017) "Attention Is All You Need"
+-   Hugging Face docs: https://huggingface.co/docs/transformers
+-   OpenAI Python SDK: https://github.com/openai/openai-python
+-   Anthropic Python SDK: https://github.com/anthropics/anthropic-sdk-python

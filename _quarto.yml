@@ -24,6 +24,8 @@ website:
             href: src/lectures/day1-pytorch/index.html
           - text: "Day 1: TensorFlow"
             href: src/lectures/day1-tensorflow/index.html
+          - text: "Day 1: LLMs"
+            href: src/lectures/day1-llms/index.html
     right:
       - icon: github
         href: "https://github.com/jfimbett/TemplateCourse"
